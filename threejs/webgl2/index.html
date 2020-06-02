@@ -13,22 +13,59 @@
 	<body>
 		<script src="js/three.js"></script>
 		<script src="js/WebGL.js"></script>
-		<script>
+		<script id="vs" type="x-shader/x-vertex">
+#version 300 es
 
-			if ( WEBGL.isWebGL2Available() === false ) {
-				document.body.appendChild( WEBGL.getWebGL2ErrorMessage() );
-			}
+void main() {
+
+	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+
+}
+		</script>
+		<script id="fs" type="x-shader/x-fragment">
+#version 300 es
+
+precision highp float;
+precision highp int;
+out vec4 out_FragColor;
+
+void main() {
+
+	out_FragColor = vec4( 1.0 );
+
+}
+		</script>
+		<script>
+			let wgl2 = WEBGL.isWebGL2Available();
 
 			var scene = new THREE.Scene();
 			var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
 
-			var renderer = new THREE.WebGLRenderer();
+			if ( wgl2 === false ) {
+				alert("no WebGL2");
+				document.body.appendChild( WEBGL.getWebGL2ErrorMessage() );
+
+				var renderer = new THREE.WebGLRenderer();
+				var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+
+			} else {
+				var canvas = document.createElement( 'canvas' );
+				var context = canvas.getContext( 'webgl2', { alpha: false } );
+				var renderer = new THREE.WebGLRenderer( { canvas: canvas, context: context } );
+
+				var material = new THREE.ShaderMaterial( {
+					vertexShader: document.getElementById( 'vs' ).textContent.trim(),
+					fragmentShader: document.getElementById( 'fs' ).textContent.trim()
+				} );
+			}
+	
+
 			renderer.setSize( window.innerWidth, window.innerHeight );
 			document.body.appendChild( renderer.domElement );
 
 			var geometry = new THREE.BoxGeometry();
-			var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
 			var cube = new THREE.Mesh( geometry, material );
+
 			scene.add( cube );
 
 			camera.position.z = 5;
